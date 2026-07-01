@@ -1,0 +1,136 @@
+
+#### Sequential Behavioral Analysis in P. Tenera####
+
+##### Load required packages ####
+library('igraph')
+
+setwd("C:/Users/danip/Desktop/papers em andamento/Animal_behaviour/R")
+
+##### Import data frame####
+peri=read.csv2('ptenera_observed_behaviours_simmetric_contests.csv',h=F,stringsAsFactors = T)
+
+##### inspect data frame####
+head(peri)
+summary(peri)
+View(peri)
+
+# remove the first row (column descriptors) and the last two columns (contest descriptors)
+peri2<-peri[-c(1),-c(1,4)]
+
+# the resulting dataset should have only 2 columns.
+# View(peri2)
+
+##### Generate the observed adjacency matrix ####
+graph<-graph_from_data_frame(peri2,directed = T) # Command to create a graph from the data frame (first column edge and subsequent behaviour vertex)
+
+# Than I convert this graph into a adjacency matrix, a way to represent a graph with the frequency of each transition values
+adjacency.matrix<-as_adjacency_matrix(graph,sparse=F)
+
+# if using your own data, the matrix should be n x n for an ethogram with n possible behaviours
+# In the adjacency matrix each cell represents the number of times one behavior (each row) transitions to another (each column) (similar to Green & Patek, 2018). 
+
+# unipartite, weighted and directed 
+adjacency.matrix #the vertical behaviors are preceding, and in the horizontal the subsequent behaviors
+
+
+#### Evaluating the modularity in the network ####
+
+# We will use the infomapecology package, which is best suited for calculating modularity in flow networks
+
+# If you do not already have the infomapecology package installed, follow these steps:
+# Install  (if not installed) and load necessary packages
+package.list=c("attempt", "cowplot", "igraph", "ggalluvial","magrittr","vegan", "dplyr","readr","ggplot2","stringr","tibble","tidyr","rlang","bipartite","tidyverse", "Matrix","DT","hablar","devtools")
+loaded <-  package.list %in% .packages()
+package.list <-  package.list[!loaded]
+installed <-  package.list %in% .packages(TRUE)
+if (!all(installed)) install.packages(package.list[!installed], repos="http://cran.rstudio.com/")
+
+devtools::install_github('Ecological-Complexity-Lab/emln', force=T)
+library(emln)
+
+# Install infomapecology
+devtools::install_github('Ecological-Complexity-Lab/infomap_ecology_package', force=T)
+library(infomapecology)
+
+# Check the version
+packageDescription('infomapecology')
+
+## defining the working diretory
+setwd("C:/Users/danip/Desktop/papers em andamento/Animal_behaviour/R")
+
+install_infomap()
+# Check Infomap is running
+
+check_infomap() # Make sure file can be run correctly. Should return TRUE
+
+
+##########################################################################################
+
+# If infomapecology is already installed:
+library(emln)
+library(infomapecology) 
+# Check Infomap is running
+check_infomap() # Make sure file can be run correctly. Should return TRUE
+
+
+##  Calculating Modularity via Infomap (codelength L and nº of modules)
+## The infomap requires an input in the form of an edgelist. Therefore, we first need to transform the adj matrix into an edgelist, then create a monolayer network, and only then run the modularity analysis. Note: the matrix is unipartite, directed, and weighted.
+
+# Converting the adj matrix into an edgelist, which contains the columns Var 1 (nodes-in), Var2 (nodes-out), and Freq (weights)
+edgelist_net <- as.data.frame(as.table(as.matrix(adjacency.matrix)))
+
+# Renaming the columns (Var 1, Var2 and Freq) to the infomapecology standard (from, to, weight)
+colnames(edgelist_net) <- c("from", "to", "weight")
+
+view(edgelist_net)
+
+# Removing zero-weighted interactions
+edgelist_net <- edgelist_net %>%
+  filter(weight > 0)
+anyNA(edgelist_net)
+
+
+# Creating the monolayer class object
+monolayer_network_net <- create_monolayer_network(edgelist_net, bipartite = F, directed = T)
+
+
+# Running the infomap from the created edgelist
+
+# Flow_model = directed - This indicates flow in a directed network. Node visitation rates are obtained using a PageRank algorithm based on direction and edge weight. Trials = number of attempts for optimization. The null model is from the commsim function of the vegan package (r2dtable), which randomizes interactions while keeping the degree constant (number of interactions per node - the nodes represent the behaviours).
+
+result_dir_net <- run_infomap_monolayer(monolayer_network_net, infomap_executable = "Infomap", flow_model = "directed", trials = 80, two_level = T, seed = 123, signif = T, shuff_method  = "r2dtable",  nsim = 1000) 
+
+# Output
+(result_dir_net$m) # Number of behavioral modules = 1
+
+(result_dir_net$L) # Modularity is computed as codelength, measured in bits, It does not represent modularity in the traditional sense (L = 3.07563)
+
+result_dir_net$modules
+res_dir_modules_net <- result_dir_net$modules %>% drop_na()
+
+write.csv2(res_dir_modules_net, "C:/Users/danip/Desktop/papers em andamento/Animal_behaviour/Results/Modularity.csv", row.names = F)
+
+print(result_dir_net$pvalue) # p-value = 0.966
+(plots <- plot_signif(result_dir_net, plotit = F)) # Plots indicating the modularity value (L) and the number of modules (dashed line) in relation to the values of the 1000 null networks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
