@@ -1,5 +1,5 @@
 # Title of the document
-What makes the ultimate fighter? Unpacking boxes in assessment strategies in contests of males of the dragonfly Perithemis tenera
+Understanding phase structure and the relative contributions of rival traits and resource value in a dragonfly contest
 
 # GENERAL INFORMATION #
 
