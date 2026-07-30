@@ -98,7 +98,7 @@ monolayer_network_net <- create_monolayer_network(edgelist_net, bipartite = F, d
 
 # Flow_model = directed - This indicates flow in a directed network. Node visitation rates are obtained using a PageRank algorithm based on direction and edge weight. Trials = number of attempts for optimization. The null model is from the commsim function of the vegan package (r2dtable), which randomizes interactions while keeping the degree constant (number of interactions per node - the nodes represent the behaviours).
 
-result_dir_net <- run_infomap_monolayer(monolayer_network_net, infomap_executable = "Infomap", flow_model = "directed", trials = 80, two_level = T, seed = 123, signif = T, shuff_method  = "r2dtable",  nsim = 1000) 
+result_dir_net <- run_infomap_monolayer(monolayer_network_net, infomap_executable = "Infomap", flow_model = "rawdir", trials = 80, two_level = T, seed = 123, signif = T, shuff_method  = "r2dtable",  nsim = 1000) 
 
 # Output
 (result_dir_net$m) # Number of behavioral modules = 1
